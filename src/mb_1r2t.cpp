@@ -39,7 +39,8 @@ void MB_1r2t::publish_loop()
 
 void MB_1r2t::publish_laser_scan()
 {
-    std::sort(m_scan_results.begin(), m_scan_results.end(), [](const ScanResult &a, const ScanResult &b){ return a.angle < b.angle; });
+    std::sort(m_scan_results.begin(), m_scan_results.end(), [](const ScanResult &a, const ScanResult &b)
+              { return a.angle < b.angle; });
 
     float avg_increment = 0;
     float min_angle = m_scan_results[0].angle;
@@ -203,12 +204,17 @@ void MB_1r2t::parse_packet()
             break;
         }
 
-        if (m_packet.type == 0x3C) {
+        if (m_packet.type == 0x3C)
+        {
             scan_data();
         }
-
-        if (m_packet.type == 0x9B) {
+        else if (m_packet.type == 0x9B)
+        {
             scan_done();
+        }
+        else
+        {
+            RCLCPP_ERROR(get_logger(), "Unknown packet type: %d", m_packet.type);
         }
 
         m_state = SYNC0;
