@@ -120,6 +120,10 @@ void MB_1r2t::scan_data()
         float anglef = (step * (angle / 0xB400));
         float angle_inv = (M_PI * 2) - anglef;
 
+        // rotate 90 degrees
+        angle_inv += M_PI / 2.0;
+
+
         ScanResult result;
         result.angle = angle_inv;
         result.distance = distancef;
