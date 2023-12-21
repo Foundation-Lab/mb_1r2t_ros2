@@ -16,7 +16,7 @@ MB_1r2t::MB_1r2t()
     m_timer = create_wall_timer(std::chrono::milliseconds(1),
                                 std::bind(&MB_1r2t::publish_loop, this));
 
-    m_laser_scan_publisher = create_publisher<sensor_msgs::msg::LaserScan>("/laser_scan", 10);
+    m_laser_scan_publisher = create_publisher<sensor_msgs::msg::LaserScan>("/scan", 10);
     m_point_cloud_publisher = create_publisher<sensor_msgs::msg::PointCloud>("/point_cloud", 10);
 
     m_serial_device = std::make_unique<SerialDevice>(*this, m_port);
