@@ -11,15 +11,15 @@ def generate_launch_description():
     ld.add_action(IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [ThisLaunchFileDir(), '/start.launch.py'])
-        )
+    )
     )
 
     ld.add_action(Node(
-            package='rviz2',
-            executable='rviz2',
-            output='screen',
-            arguments=['-d', [ThisLaunchFileDir(), '/../rviz/mb_1r2t.rviz']],
-        )
+        package='rviz2',
+        executable='rviz2',
+        output='screen',
+        arguments=['-d', [ThisLaunchFileDir(), '/../rviz/mb_1r2t.rviz']],
+    )
     )
 
     return ld

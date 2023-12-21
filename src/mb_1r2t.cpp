@@ -14,7 +14,7 @@ MB_1r2t::MB_1r2t()
     m_frame_id = get_parameter("frame_id").as_string();
 
     m_timer = create_wall_timer(std::chrono::milliseconds(1),
-        std::bind(&MB_1r2t::publish_loop, this));
+                                std::bind(&MB_1r2t::publish_loop, this));
 
     m_laser_scan_publisher = create_publisher<sensor_msgs::msg::LaserScan>("/laser_scan", 10);
     m_point_cloud_publisher = create_publisher<sensor_msgs::msg::PointCloud>("/point_cloud", 10);
@@ -39,20 +39,20 @@ void MB_1r2t::publish_loop()
 
 void MB_1r2t::publish_laser_scan()
 {
-    std::sort(m_scan_results.begin(), m_scan_results.end(), [](const ScanResult& a, const ScanResult& b) {
-        return a.angle < b.angle;
-    });
+    std::sort(m_scan_results.begin(), m_scan_results.end(), [](const ScanResult &a, const ScanResult &b){ return a.angle < b.angle; });
 
     float avg_increment = 0;
     float min_angle = m_scan_results[0].angle;
     float max_angle = m_scan_results[m_scan_results.size() - 1].angle;
 
-    for (size_t i = 1; i < m_scan_results.size(); ++i) {
+    for (size_t i = 1; i < m_scan_results.size(); ++i)
+    {
         avg_increment += m_scan_results[i].angle - m_scan_results[i - 1].angle;
     }
     avg_increment /= (float)(m_scan_results.size() - 1);
 
-    for (ScanResult& s : m_scan_results) {
+    for (ScanResult &s : m_scan_results)
+    {
         m_laser_scan_msg.ranges.emplace_back(s.distance);
         m_laser_scan_msg.intensities.emplace_back(s.distance);
     }
@@ -94,16 +94,19 @@ void MB_1r2t::scan_data()
 {
     // TODO: search datasheet to verify this
     int16_t diff = m_packet.stop_angle - m_packet.start_angle;
-    if (m_packet.stop_angle < m_packet.start_angle) {
+    if (m_packet.stop_angle < m_packet.start_angle)
+    {
         diff = 0xB400 - m_packet.start_angle + m_packet.stop_angle;
     }
 
     int16_t angle_per_sample = 0;
-    if (diff > 1) {
+    if (diff > 1)
+    {
         angle_per_sample = diff / (m_packet.data_length - 1);
     }
 
-    for (int i = 0; i < m_packet.data_length; ++i) {
+    for (int i = 0; i < m_packet.data_length; ++i)
+    {
         uint16_t index = i * 3;
         uint8_t intensity = m_packet.data[index + 0];
         uint8_t distance_L = m_packet.data[index + 1];
@@ -135,33 +138,41 @@ void MB_1r2t::scan_data()
 
 void MB_1r2t::parse_packet()
 {
-    switch (m_state) {
+    switch (m_state)
+    {
     case SYNC0:
-        if (m_serial_device->read(&m_packet.sync_0, 1) == false) {
+        if (m_serial_device->read(&m_packet.sync_0, 1) == false)
+        {
             break;
         }
 
-        if (m_packet.sync_0 == SYNC_BYTE0) {
+        if (m_packet.sync_0 == SYNC_BYTE0)
+        {
             m_state = SYNC1;
         }
 
         break;
 
     case SYNC1:
-        if (m_serial_device->read(&m_packet.sync_1, 1) == false) {
+        if (m_serial_device->read(&m_packet.sync_1, 1) == false)
+        {
             break;
         }
 
-        if (m_packet.sync_1 == SYNC_BYTE1) {
+        if (m_packet.sync_1 == SYNC_BYTE1)
+        {
             m_state = HEADER;
-        } else {
+        }
+        else
+        {
             m_state = SYNC0;
         }
 
         break;
 
     case HEADER:
-        if (m_serial_device->read(m_packet.data, 8) == false) {
+        if (m_serial_device->read(m_packet.data, 8) == false)
+        {
             m_state = SYNC0;
             break;
         }
@@ -175,27 +186,29 @@ void MB_1r2t::parse_packet()
         m_state = DATA;
         break;
 
-    case DATA: {
+    case DATA:
+    {
         uint16_t bytes_to_read = m_packet.data_length * 3;
 
         // invalid data
-        if (bytes_to_read > DATA_SIZE) {
+        if (bytes_to_read > DATA_SIZE)
+        {
             m_state = SYNC0;
             break;
         }
 
-        if (m_serial_device->read(m_packet.data, bytes_to_read) == false) {
+        if (m_serial_device->read(m_packet.data, bytes_to_read) == false)
+        {
             m_state = SYNC0;
             break;
         }
 
-        if (m_packet.type == SCAN_DONE) {
-            scan_done();
-        } else if (m_packet.type == SCAN_DATA) {
+        if (m_packet.type == 0x3C) {
             scan_data();
-        } else {
-            // NOTE: This can be a sign if rotation is blocked.
-            RCLCPP_ERROR(get_logger(), "Unknown packet type: %02X", m_packet.type);
+        }
+
+        if (m_packet.type == 0x9B) {
+            scan_done();
         }
 
         m_state = SYNC0;
