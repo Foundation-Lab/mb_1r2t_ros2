@@ -198,24 +198,18 @@ void MB_1r2t::parse_packet()
             break;
         }
 
+        if (m_packet.type & 1)
+        {
+            scan_done();
+        }
+
         if (m_serial_device->read(m_packet.data, bytes_to_read) == false)
         {
             m_state = SYNC0;
             break;
         }
 
-        if (m_packet.type == 0x3C)
-        {
-            scan_data();
-        }
-        else if (m_packet.type == 0x9B)
-        {
-            scan_done();
-        }
-        else
-        {
-            RCLCPP_ERROR(get_logger(), "Unknown packet type: %d", m_packet.type);
-        }
+        scan_data();
 
         m_state = SYNC0;
         break;
